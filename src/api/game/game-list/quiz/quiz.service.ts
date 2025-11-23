@@ -11,16 +11,10 @@ import {
   type IUpdateQuiz,
 } from './schema';
 
-function shuffleArray<T>(array: T[]): T[] {
-  for (let index = array.length - 1; index > 0; index--) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [array[index], array[randomIndex]] = [array[randomIndex], array[index]];
-  }
-
-  return array;
-}
-
 export abstract class QuizService {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private static QUIZ_SLUG = 'quiz';
+
   static async createQuiz(data: ICreateQuiz, user_id: string) {
     await this.existGameCheck(data.name);
 
@@ -75,9 +69,10 @@ export abstract class QuizService {
       is_answer_randomized: data.is_answer_randomized,
       questions: data.questions.map(question => ({
         question_text: question.question_text,
-        question_image: question.question_image_array_index
-          ? imageArray[question.question_image_array_index]
-          : null,
+        question_image:
+          typeof question.question_image_array_index === 'number'
+            ? imageArray[question.question_image_array_index]
+            : null,
         answers: question.answers,
       })),
     };
@@ -117,10 +112,15 @@ export abstract class QuizService {
         created_at: true,
         game_json: true,
         creator_id: true,
+        total_played: true,
+        game_template: {
+          select: { slug: true },
+        },
       },
     });
 
-    if (!game) throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+    if (!game || game.game_template.slug !== this.QUIZ_SLUG)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
 
     if (user_role !== 'SUPER_ADMIN' && game.creator_id !== user_id)
       throw new ErrorResponse(
@@ -131,6 +131,7 @@ export abstract class QuizService {
     return {
       ...game,
       creator_id: undefined,
+      game_template: undefined,
     };
   }
 
@@ -150,16 +151,33 @@ export abstract class QuizService {
         is_published: true,
         game_json: true,
         creator_id: true,
+        game_template: {
+          select: { slug: true },
+        },
       },
     });
 
-    if (!game) throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+    if (!game || game.game_template.slug !== this.QUIZ_SLUG)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
 
     if (user_role !== 'SUPER_ADMIN' && game.creator_id !== user_id)
       throw new ErrorResponse(
         StatusCodes.FORBIDDEN,
         'User cannot access this game',
       );
+
+    if (data.name) {
+      const isNameExist = await prisma.games.findUnique({
+        where: { name: data.name },
+        select: { id: true },
+      });
+
+      if (isNameExist && isNameExist.id !== game_id)
+        throw new ErrorResponse(
+          StatusCodes.BAD_REQUEST,
+          'Game name is already used',
+        );
+    }
 
     const oldQuizJson = game.game_json as IQuizJson | null;
     const oldImagePaths: string[] = [];
@@ -200,7 +218,7 @@ export abstract class QuizService {
     )
       throw new ErrorResponse(
         StatusCodes.BAD_REQUEST,
-        'all uploaded file must be used',
+        'All uploaded file must be used',
       );
 
     let thumbnailImagePath = game.thumbnail_image;
@@ -293,10 +311,14 @@ export abstract class QuizService {
       select: {
         id: true,
         game_json: true,
+        game_template: {
+          select: { slug: true },
+        },
       },
     });
 
-    if (!game) throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+    if (!game || game.game_template.slug !== this.QUIZ_SLUG)
+      throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
 
     const quizJson = game.game_json as unknown as IQuizJson;
     const results = [];
@@ -383,12 +405,17 @@ export abstract class QuizService {
         thumbnail_image: true,
         is_published: true,
         game_json: true,
+        game_template: {
+          select: { slug: true },
+        },
       },
     });
 
-    if (!game) throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
-
-    if (!game.is_published)
+    if (
+      !game ||
+      !game.is_published ||
+      game.game_template.slug !== this.QUIZ_SLUG
+    )
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
 
     const quizJson = game.game_json as unknown as IQuizJson | null;
@@ -410,7 +437,7 @@ export abstract class QuizService {
     );
 
     if (quizJson.is_question_randomized && questionsWithIndex.length > 0) {
-      shuffleArray(questionsWithIndex);
+      this.shuffleArray(questionsWithIndex);
     }
 
     const cleanedQuestions = questionsWithIndex.map(question => {
@@ -419,7 +446,7 @@ export abstract class QuizService {
         answer_index: ans.answer_index,
       }));
 
-      if (quizJson.is_answer_randomized) shuffleArray(answers);
+      if (quizJson.is_answer_randomized) this.shuffleArray(answers);
 
       return {
         question_text: question.question_text,
@@ -503,7 +530,7 @@ export abstract class QuizService {
 
   private static async getGameTemplateId() {
     const result = await prisma.gameTemplates.findUnique({
-      where: { slug: 'quiz' },
+      where: { slug: this.QUIZ_SLUG },
       select: { id: true },
     });
 
@@ -511,5 +538,14 @@ export abstract class QuizService {
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game template not found');
 
     return result.id;
+  }
+
+  private static shuffleArray<T>(array: T[]): T[] {
+    for (let index = array.length - 1; index > 0; index--) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [array[index], array[randomIndex]] = [array[randomIndex], array[index]];
+    }
+
+    return array;
   }
 }
