@@ -395,7 +395,12 @@ export abstract class QuizService {
     };
   }
 
-  static async getQuizPublicPlay(game_id: string) {
+  static async getQuizPlay(
+    game_id: string,
+    is_public: boolean,
+    user_id?: string,
+    user_role?: ROLE,
+  ) {
     const game = await prisma.games.findUnique({
       where: { id: game_id },
       select: {
@@ -405,6 +410,7 @@ export abstract class QuizService {
         thumbnail_image: true,
         is_published: true,
         game_json: true,
+        creator_id: true,
         game_template: {
           select: { slug: true },
         },
@@ -413,10 +419,20 @@ export abstract class QuizService {
 
     if (
       !game ||
-      !game.is_published ||
+      (is_public && !game.is_published) ||
       game.game_template.slug !== this.QUIZ_SLUG
     )
       throw new ErrorResponse(StatusCodes.NOT_FOUND, 'Game not found');
+
+    if (
+      !is_public &&
+      user_role !== 'SUPER_ADMIN' &&
+      game.creator_id !== user_id
+    )
+      throw new ErrorResponse(
+        StatusCodes.FORBIDDEN,
+        'User cannot get this game data',
+      );
 
     const quizJson = game.game_json as unknown as IQuizJson | null;
 

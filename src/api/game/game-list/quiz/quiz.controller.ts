@@ -90,12 +90,40 @@ export const QuizController = Router()
       next: NextFunction,
     ) => {
       try {
-        const game = await QuizService.getQuizPublicPlay(
+        const game = await QuizService.getQuizPlay(
           request.params.game_id,
+          true,
         );
         const result = new SuccessResponse(
           StatusCodes.OK,
           'Get public game successfully',
+          game,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/:game_id/play/private',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const game = await QuizService.getQuizPlay(
+          request.params.game_id,
+          true,
+          request.user!.user_id,
+          request.user!.role,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Get private game successfully',
           game,
         );
 
