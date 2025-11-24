@@ -169,10 +169,9 @@ export const QuizController = Router()
   )
   .post(
     '/:game_id/check',
-    validateAuth({}),
     validateBody({ schema: CheckAnswerSchema }),
     async (
-      request: AuthedRequest<{ game_id: string }, {}, ICheckAnswer>,
+      request: Request<{ game_id: string }, {}, ICheckAnswer>,
       response: Response,
       next: NextFunction,
     ) => {
