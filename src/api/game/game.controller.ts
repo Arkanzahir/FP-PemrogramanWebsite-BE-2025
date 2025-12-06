@@ -17,7 +17,6 @@ import {
 import { AdditionalValidation } from '@/utils';
 
 import { GameService } from './game.service';
-// 📌 Import GameListRouter yang membawa rute PairOrNoPair
 import GameListRouter from './game-list/game-list.router';
 import {
   GamePaginateQuerySchema,
@@ -29,11 +28,6 @@ import {
   UpdatePlayCountSchema,
   UpdatePublishStatusSchema,
 } from './schema';
-
-// 📌 DEBUGGING: Pastikan file ini dieksekusi saat server startup
-console.log(
-  'GameController loaded successfully, attempting to use GameListRouter',
-);
 
 export const GameController = Router()
   .get(
@@ -236,5 +230,4 @@ export const GameController = Router()
       }
     },
   )
-  // 📌 WIRING TAMBAHAN UNTUK GAME LIST
   .use('/game-type', GameListRouter);

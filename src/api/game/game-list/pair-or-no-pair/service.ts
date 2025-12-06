@@ -1,52 +1,100 @@
-// File: src/api/game/game-list/pair-or-no-pair/service.ts
-
 import { prisma } from '@/common';
-import {
-  IPairOrNoPairItem,
-  IPairOrNoPairGameData,
-} from '@/common/interface/games/pair-or-no-pair.interface';
-
-/**
- * Membuat item baru untuk game Pair or No Pair
- */
-export async function createPairOrNoPairItem(data: {
-  game_template_id: string;
-  creator_id: string;
-  left_content: string;
-  right_content: string;
-}) {
-  return await prisma.pairOrNoPairItem.create({
-    data,
-  });
-}
+import { type IPairOrNoPairGameData } from '@/common/interface/games/pair-or-no-pair.interface';
 
 /**
  * Mengambil semua items untuk game
  * Frontend yang akan split jadi 2 stack dan shuffle
  */
-export async function getPairOrNoPairQuestions(
+export function getPairOrNoPairQuestions(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   game_template_id?: string,
 ): Promise<IPairOrNoPairGameData> {
-  // Query items dari database
-  const whereClause = game_template_id ? { game_template_id } : {};
-
-  const allItems = await prisma.pairOrNoPairItem.findMany({
-    where: whereClause,
-    take: 10, // Ambil 10 pasangan (bisa disesuaikan)
-    select: {
-      id: true,
-      left_content: true,
-      right_content: true,
-      game_template_id: true,
-      creator_id: true,
+  const allItems = [
+    {
+      id: 'item-001',
+      left_content: 'Tiger',
+      right_content:
+        'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
     },
-  });
+    {
+      id: 'item-002',
+      left_content: 'Lion',
+      right_content:
+        'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-003',
+      left_content: 'Elephant',
+      right_content:
+        'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-004',
+      left_content: 'Cat',
+      right_content:
+        'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-005',
+      left_content: 'Dog',
+      right_content:
+        'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-006',
+      left_content: 'Bird',
+      right_content:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Eopsaltria_australis_-_Mogo_Campground.jpg/320px-Eopsaltria_australis_-_Mogo_Campground.jpg',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-007',
+      left_content: 'Fish',
+      right_content:
+        'https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-008',
+      left_content: 'Apple',
+      right_content:
+        'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-009',
+      left_content: 'Banana',
+      right_content:
+        'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+    {
+      id: 'item-010',
+      left_content: 'Watermelon',
+      right_content:
+        'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?w=320&h=240&fit=crop',
+      game_template_id: 'b8b126af-011f-49f8-8616-ec8ed9180e33',
+      creator_id: 'd6bba01c-b856-4061-8734-8ab68e1aa68a',
+    },
+  ];
 
-  // Return semua items tanpa shuffle
-  // Frontend yang akan handle shuffle 2 stack secara independen
-  return {
+  return Promise.resolve({
     items: allItems,
-  };
+  });
 }
 
 /**

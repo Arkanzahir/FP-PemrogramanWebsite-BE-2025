@@ -30,8 +30,6 @@ model Users {
 
   games             Games[]
   liked_games       LikedGames[]
-  // Hubungan baru dengan PairOrNoPairItem
-  pair_or_no_pair_items PairOrNoPairItem[] 
 }
 
 model GameTemplates {
@@ -47,8 +45,6 @@ model GameTemplates {
   updated_at            DateTime  @default(now()) @updatedAt
 
   games                 Games[]
-  // Hubungan baru dengan PairOrNoPairItem
-  pair_or_no_pair_templates PairOrNoPairItem[] 
   
   @@index([slug, name])
 }
@@ -75,22 +71,6 @@ model Games {
   @@index([name])
 }
 
-// TAMBAHAN: MODEL UNTUK GAME "PAIR OR NO PAIR"
-model PairOrNoPairItem {
-  id            String   @id @default(cuid())
-  game_template_id String 
-  creator_id    String   
-  left_content  String   
-  right_content String   
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  // Hubungan dengan tabel lain
-  creator           Users         @relation(fields: [creator_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  game_template     GameTemplates @relation(fields: [game_template_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  @@map("pair_or_no_pair_items")
-}
 
 
 model LikedGames {
