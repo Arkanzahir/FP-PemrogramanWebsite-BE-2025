@@ -6,26 +6,43 @@ import {
 } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-import { SuccessResponse, validateBody } from '@/common';
+import {
+  type AuthedRequest,
+  SuccessResponse,
+  validateAuth,
+  validateBody,
+} from '@/common';
 
-import { UpdatePlayCountSchema } from './schema';
-import { getPairOrNoPairQuestions, updatePlayCount } from './service';
+import { PairOrNoPairService } from './pair-or-no-pair.service';
+import {
+  CreatePairOrNoPairSchema,
+  type ICreatePairOrNoPair,
+  type IUpdatePairOrNoPair,
+  UpdatePairOrNoPairSchema,
+} from './schema';
 
 export const PairOrNoPairController = Router()
-  .get(
-    '/start',
-    async (request: Request, response: Response, next: NextFunction) => {
+  .post(
+    '/',
+    validateAuth({}),
+    validateBody({
+      schema: CreatePairOrNoPairSchema,
+      file_fields: [{ name: 'thumbnail_image', maxCount: 1 }],
+    }),
+    async (
+      request: AuthedRequest<{}, {}, ICreatePairOrNoPair>,
+      response: Response,
+      next: NextFunction,
+    ) => {
       try {
-        const game_template_id = request.query.game_template_id as
-          | string
-          | undefined;
-
-        const data = await getPairOrNoPairQuestions(game_template_id);
-
+        const newGame = await PairOrNoPairService.createGame(
+          request.body,
+          request.user!.user_id,
+        );
         const result = new SuccessResponse(
-          StatusCodes.OK,
-          'Game Started',
-          data.items,
+          StatusCodes.CREATED,
+          'Game created',
+          newGame,
         );
 
         return response.status(result.statusCode).json(result.json());
@@ -34,24 +51,140 @@ export const PairOrNoPairController = Router()
       }
     },
   )
-  .post(
-    '/play-count',
-    validateBody({ schema: UpdatePlayCountSchema }),
-    async (request: Request, response: Response, next: NextFunction) => {
+  .get(
+    '/:game_id',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
       try {
-        const { game_id } = request.body as { game_id: string };
-
-        await updatePlayCount(game_id);
-
+        const game = await PairOrNoPairService.getGameDetail(
+          request.params.game_id,
+          request.user!.user_id,
+          request.user!.role,
+        );
         const result = new SuccessResponse(
           StatusCodes.OK,
-          'Play count updated successfully',
-          { success: true },
+          'Get game successfully',
+          game,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/:game_id/play/public',
+    async (
+      request: Request<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const game = await PairOrNoPairService.getGamePlay(
+          request.params.game_id,
+          true,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Get public game successfully',
+          game,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .get(
+    '/:game_id/play/private',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const game = await PairOrNoPairService.getGamePlay(
+          request.params.game_id,
+          false,
+          request.user!.user_id,
+          request.user!.role,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Get private game successfully',
+          game,
+        );
+
+        return response.status(result.statusCode).json(result.json());
+      } catch (error) {
+        return next(error);
+      }
+    },
+  )
+  .patch(
+    '/:game_id',
+    validateAuth({}),
+    validateBody({
+      schema: UpdatePairOrNoPairSchema,
+      file_fields: [{ name: 'thumbnail_image', maxCount: 1 }],
+    }),
+    async (
+      request: AuthedRequest<{ game_id: string }, {}, IUpdatePairOrNoPair>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const updatedGame = await PairOrNoPairService.updateGame(
+          request.body,
+          request.params.game_id,
+          request.user!.user_id,
+          request.user!.role,
+        );
+        const result = new SuccessResponse(
+          StatusCodes.OK,
+          'Game updated',
+          updatedGame,
         );
 
         return response.status(result.statusCode).json(result.json());
       } catch (error) {
         next(error);
+      }
+    },
+  )
+  .delete(
+    '/:game_id',
+    validateAuth({}),
+    async (
+      request: AuthedRequest<{ game_id: string }>,
+      response: Response,
+      next: NextFunction,
+    ) => {
+      try {
+        const result = await PairOrNoPairService.deleteGame(
+          request.params.game_id,
+          request.user!.user_id,
+          request.user!.role,
+        );
+
+        const successResponse = new SuccessResponse(
+          StatusCodes.OK,
+          'Game deleted successfully',
+          result,
+        );
+
+        return response
+          .status(successResponse.statusCode)
+          .json(successResponse.json());
+      } catch (error) {
+        return next(error);
       }
     },
   );
