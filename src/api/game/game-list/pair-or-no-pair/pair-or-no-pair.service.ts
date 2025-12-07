@@ -2,7 +2,8 @@ import { type Prisma, type ROLE } from '@prisma/client';
 import { StatusCodes } from 'http-status-codes';
 import { v4 } from 'uuid';
 
-import { ErrorResponse, type IPairOrNoPairGameData, prisma } from '@/common';
+import { ErrorResponse, prisma } from '@/common';
+import { type IPairOrNoPairGameData } from '@/common/interface/games';
 import { FileManager } from '@/utils';
 
 import { type ICreatePairOrNoPair, type IUpdatePairOrNoPair } from './schema';

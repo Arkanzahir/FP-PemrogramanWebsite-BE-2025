@@ -1,5 +1,3 @@
-// File: src/api/game/game.controller.ts
-
 import {
   type NextFunction,
   type Request,

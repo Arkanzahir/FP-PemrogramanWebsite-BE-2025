@@ -47,7 +47,7 @@ export const PairOrNoPairController = Router()
 
         return response.status(result.statusCode).json(result.json());
       } catch (error) {
-        next(error);
+        return next(error);
       }
     },
   )
@@ -155,7 +155,7 @@ export const PairOrNoPairController = Router()
 
         return response.status(result.statusCode).json(result.json());
       } catch (error) {
-        next(error);
+        return next(error);
       }
     },
   )
