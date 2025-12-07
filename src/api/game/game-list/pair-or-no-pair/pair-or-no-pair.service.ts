@@ -28,8 +28,6 @@ export abstract class PairOrNoPairService {
         id: `item-${String(index + 1).padStart(3, '0')}`,
         left_content: item.left_content,
         right_content: item.right_content,
-        game_template_id: gameTemplateId,
-        creator_id: user_id,
       })),
     };
 
