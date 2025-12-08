@@ -92,7 +92,7 @@ model Leaderboard {
   user_id      String?
   game_id      String
   score        Int
-  difficulty   String   // "easy" | "normal" | "hard"
+  difficulty   String?  // Optional: "easy" | "normal" | "hard"
   time_taken   Int?     // Time in seconds
 
   user         Users?   @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: Cascade)

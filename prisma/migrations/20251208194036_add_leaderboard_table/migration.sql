@@ -4,7 +4,7 @@ CREATE TABLE "Leaderboard" (
     "user_id" TEXT,
     "game_id" TEXT NOT NULL,
     "score" INTEGER NOT NULL,
-    "difficulty" TEXT NOT NULL,
+    "difficulty" TEXT,
     "time_taken" INTEGER,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
